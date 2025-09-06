@@ -3,8 +3,8 @@ import { doc, deleteDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
 
 export const deleteFilm = async (id) => {
-  const docRef = doc(db, 'films', id);
-  
+  const docRef = doc(db, "films", id);
+
   try {
     await deleteDoc(docRef);
     return { success: true };
@@ -15,8 +15,8 @@ export const deleteFilm = async (id) => {
 };
 
 export const deleteSeries = async (id) => {
-  const docRef = doc(db, 'series', id);
-  
+  const docRef = doc(db, "series", id);
+
   try {
     await deleteDoc(docRef);
     return { success: true };
@@ -27,8 +27,8 @@ export const deleteSeries = async (id) => {
 };
 
 export const deleteAnime = async (id) => {
-  const docRef = doc(db, 'anime', id);
-  
+  const docRef = doc(db, "anime", id);
+
   try {
     await deleteDoc(docRef);
     return { success: true };
@@ -39,8 +39,8 @@ export const deleteAnime = async (id) => {
 };
 
 export const deleteCartoon = async (id) => {
-  const docRef = doc(db, 'cartoon', id);
-  
+  const docRef = doc(db, "cartoon", id);
+
   try {
     await deleteDoc(docRef);
     return { success: true };
@@ -52,8 +52,8 @@ export const deleteCartoon = async (id) => {
 
 // Watchlist delete functions
 export const deleteWatchlistFilm = async (id) => {
-  const docRef = doc(db, 'watchlist_film', id);
-  
+  const docRef = doc(db, "watchlist_film", id);
+
   try {
     await deleteDoc(docRef);
     return { success: true };
@@ -64,8 +64,8 @@ export const deleteWatchlistFilm = async (id) => {
 };
 
 export const deleteWatchlistSeries = async (id) => {
-  const docRef = doc(db, 'watchlist_series', id);
-  
+  const docRef = doc(db, "watchlist_series", id);
+
   try {
     await deleteDoc(docRef);
     return { success: true };
@@ -76,8 +76,8 @@ export const deleteWatchlistSeries = async (id) => {
 };
 
 export const deleteWatchlistAnime = async (id) => {
-  const docRef = doc(db, 'watchlist_anime', id);
-  
+  const docRef = doc(db, "watchlist_anime", id);
+
   try {
     await deleteDoc(docRef);
     return { success: true };
@@ -88,8 +88,8 @@ export const deleteWatchlistAnime = async (id) => {
 };
 
 export const deleteWatchlistCartoon = async (id) => {
-  const docRef = doc(db, 'watchlist_cartoon', id);
-  
+  const docRef = doc(db, "watchlist_cartoon", id);
+
   try {
     await deleteDoc(docRef);
     return { success: true };
@@ -101,33 +101,36 @@ export const deleteWatchlistCartoon = async (id) => {
 
 // Generic delete function that handles all types
 export const deleteItem = async (id, type, isWatchlist = false) => {
+  console.log(id, type, isWatchlist);
+
   try {
     let deleteFunction;
     if (isWatchlist) {
+
       switch (type) {
-        case 'films':
+        case "films":
           return await deleteWatchlistFilm(id);
-        case 'series':
+        case "series":
           return await deleteWatchlistSeries(id);
-        case 'anime':
+        case "anime":
           return await deleteWatchlistAnime(id);
-        case 'cartoon':
+        case "cartoon":
           return await deleteWatchlistCartoon(id);
         default:
-          throw new Error('Invalid type');
+          throw new Error("Invalid type");
       }
     } else {
       switch (type) {
-        case 'films':
+        case "films":
           return await deleteFilm(id);
-        case 'series':
+        case "series":
           return await deleteSeries(id);
-        case 'anime':
+        case "anime":
           return await deleteAnime(id);
-        case 'cartoon':
+        case "cartoon":
           return await deleteCartoon(id);
         default:
-          throw new Error('Invalid type');
+          throw new Error("Invalid type");
       }
     }
   } catch (error) {

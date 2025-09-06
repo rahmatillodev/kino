@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiRefreshCw, FiPlus, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import useMediaStore from '../services/get_data';
 import Loading from '../components/loading';
 import { AddFilmModal } from '../components/modal/add_film_modal';
@@ -15,28 +15,29 @@ import {
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { deleteItem } from '../services/delete_data';
-import { addFilm, addSeries, addAnime, addCartoon, moveFromWatchlistToMain, moveFromMainToWatchlist } from '../services/add_data';
+import { addFilm, moveFromWatchlistToMain, moveFromMainToWatchlist } from '../services/add_data';
 import { editItem } from '../services/edit_data';
 import { Link } from 'react-router-dom';
 
-function Home() {
+function HomeFilms() {
   const { 
-    currentView, 
     isWatchlist, 
     loading, 
     error, 
-    setCurrentView, 
     toggleWatchlist, 
     fetchCurrentCollection,
     getCurrentCollectionData,
     refreshFilms,
-    refreshSeries,
-    refreshAnime,
-    refreshCartoon
+    setCurrentView,
   } = useMediaStore();
+
+  React.useEffect(() => {
+    setCurrentView('films');
+  }, [setCurrentView]);
 
   const [isOpen, setIsOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
+  const [editingItem, setEditingItem] = useState(null); // Yangi state: tahrirlanayotgan item
   const [newItem, setNewItem] = useState({
     name: '',
     year: '',
@@ -44,77 +45,69 @@ function Home() {
     image: '',
     imdbLink: '',
     nameUz: '',
-    studio: '',
     country: '',
-    duration: ''
+    duration: '',
   });
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
 
-  // Get current collection data
   const currentData = getCurrentCollectionData();
 
-  // Handle collection type change
-  const handleCollectionChange = (collectionType) => {
-    setCurrentView(collectionType);
-  };
-
-  // Handle watchlist toggle
   const handleWatchlistToggle = () => {
     toggleWatchlist();
   };
 
-  // Handle adding new item
   const handleAddItem = (data) => {
     console.log('Adding new item:', data);
     
-    let addFunction;
-    switch (currentView) {
-      case 'films':
-        addFunction = isWatchlist ? addFilm : addFilm;
-        break;
-      case 'series':
-        addFunction = isWatchlist ? addSeries : addSeries;
-        break;
-      case 'anime':
-        addFunction = isWatchlist ? addAnime : addAnime;
-        break;
-      case 'cartoon':
-        addFunction = isWatchlist ? addCartoon : addCartoon;
-        break;
-      default:
-        addFunction = addFilm;
+    if (isEdit && editingItem) {
+      editItem(editingItem.id, data, 'films', isWatchlist)
+        .then(result => {
+          if (result.success) {
+            fetchCurrentCollection();
+            setIsOpen(false);
+            setIsEdit(false);
+            setEditingItem(null);
+            setNewItem({
+              name: '',
+              year: '',
+              description: '',
+              image: '',
+              imdbLink: '',
+              nameUz: '',
+              country: '',
+              duration: '',
+            });
+          }
+        });
+    } else {
+      // Yangi qo'shish rejimi
+      addFilm(data, isWatchlist);
+      fetchCurrentCollection();
+      setIsOpen(false);
+      setNewItem({
+        name: '',
+        year: '',
+        description: '',
+        image: '',
+        imdbLink: '',
+        nameUz: '',
+        country: '',
+        duration: '',
+      });
     }
-    
-    addFunction(data);
-    fetchCurrentCollection();
-    setIsOpen(false);
-    setNewItem({
-      name: '',
-      year: '',
-      description: '',
-      image: '',
-      imdbLink: '',
-      nameUz: '',
-      studio: '',
-      country: '',
-      duration: ''
-    });
   };
 
-  // Handle moving item between watchlist and main collection
   const handleMoveItem = async (item) => {
     try {
       if (isWatchlist) {
-        // Move from watchlist to main
-        const result = await moveFromWatchlistToMain(item, currentView);
+        const result = await moveFromWatchlistToMain(item, 'films');
         if (result.success) {
           console.log(result.message);
           fetchCurrentCollection();
         }
       } else {
-        // Move from main to watchlist
-        const result = await moveFromMainToWatchlist(item, currentView);
+        const result = await moveFromMainToWatchlist(item, 'films');
         if (result.success) {
           console.log(result.message);
           fetchCurrentCollection();
@@ -125,10 +118,9 @@ function Home() {
     }
   };
 
-  // Handle delete item
   const handleDeleteItem = async () => {
     if (itemToDelete) {
-      const result = await deleteItem(itemToDelete.id, currentView, isWatchlist);
+      const result = await deleteItem(itemToDelete.id, 'films', isWatchlist);
       if (result.success) {
         fetchCurrentCollection();
         setIsDeleteModalOpen(false); 
@@ -142,30 +134,27 @@ function Home() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleCancelDelete = () => {
-    setIsDeleteModalOpen(false); 
-    setItemToDelete(null); 
-  };
-
-  const handleEditItem = async (item) => {
+  const handleEditItem = (item) => {
     setIsEdit(true);
-    setNewItem(item);
-    const result = await editItem(item.id, item, currentView, isWatchlist);
-    if (result.success) {
-      fetchCurrentCollection();
-    }
-    setIsOpen(true);
+    setEditingItem(item); // Tahrirlanayotgan itemni saqlaymiz
+    setNewItem(item); // Formni to'ldiramiz
+    setIsOpen(true); // Modalni ochamiz
   };
 
-  // Get refresh function based on current view
-  const getRefreshFunction = () => {
-    switch (currentView) {
-      case 'films': return refreshFilms;
-      case 'series': return refreshSeries;
-      case 'anime': return refreshAnime;
-      case 'cartoon': return refreshCartoon;
-      default: return refreshFilms;
-    }
+  const handleModalClose = () => {
+    setIsOpen(false);
+    setIsEdit(false);
+    setEditingItem(null);
+    setNewItem({
+      name: '',
+      year: '',
+      description: '',
+      image: '',
+      imdbLink: '',
+      nameUz: '',
+      country: '',
+      duration: '',
+    });
   };
 
   if (loading) return <Loading />;
@@ -174,23 +163,6 @@ function Home() {
     <div className='p-8 max-w-8xl mx-auto'>
       {error && <div className='text-red-500 mb-4'>{error}</div>}
 
-      {/* Collection Type Selector */}
-      <div className='flex justify-center mb-6'>
-        <div className='flex space-x-2 bg-gray-100 p-2 rounded-lg'>
-          {['films', 'series', 'anime', 'cartoon'].map((type) => (
-            <Button
-              key={type}
-              variant={currentView === type ? 'default' : 'outline'}
-              onClick={() => handleCollectionChange(type)}
-              className='capitalize'
-            >
-              {type}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Watchlist Toggle */}
       <div className='flex justify-center mb-6'>
         <Button
           variant={isWatchlist ? 'default' : 'outline'}
@@ -203,15 +175,15 @@ function Home() {
       </div>
 
       <div className='flex justify-between items-center mb-6'>
-        <h1 className='text-2xl font-bold capitalize'>
-          {isWatchlist ? 'Watchlist ' : ''}{currentView}
+        <h1 className='text-2xl font-bold'>
+          {isWatchlist ? 'Watchlist Films' : 'Films'}
         </h1>
         <div className='flex gap-4'>
-          <Button className='bg-blue-500 text-white' onClick={getRefreshFunction()}>
+          <Button className='bg-blue-500 text-white' onClick={refreshFilms}>
             Refresh
           </Button>
           <Button className='bg-green-500 text-white' onClick={() => setIsOpen(true)}>
-            Add {currentView.slice(0, -1)}
+            Add Film
           </Button>
         </div>
       </div>
@@ -220,20 +192,22 @@ function Home() {
         <Table>
           <TableHeader className='bg-gray-100 border border-black'>
             <TableRow>
+              <TableHead className='border border-black text-center'>ID</TableHead>
               <TableHead className='border border-black text-center'>Poster</TableHead>
               <TableHead className='border border-black text-center'>Name</TableHead>
-              <TableHead className='border border-black text-center'>IMDb</TableHead>
               <TableHead className='border border-black text-center'>Name (Uzbek)</TableHead>
+              <TableHead className='border border-black text-center'>IMDb</TableHead>
               <TableHead className='border border-black text-center'>Year</TableHead>
-              <TableHead className='border border-black text-center'>Studio</TableHead>
               <TableHead className='border border-black text-center'>Country</TableHead>
               <TableHead className='border border-black text-center'>Duration</TableHead>
               <TableHead className='border border-black text-center'>Actions</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className='text-center'>
             {currentData.map((item, index) => (
+              console.log(item),
               <TableRow key={index}>
+                <TableCell>{index + 1}</TableCell>
                 <TableCell>
                   {item.image && (
                     <img
@@ -246,6 +220,7 @@ function Home() {
                 <TableCell>
                   <div>{item.name}</div>
                 </TableCell>
+                <TableCell>{item.nameUz}</TableCell>
                 <TableCell>
                   {item.imdbLink && (
                     <a href={item.imdbLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 text-sm">
@@ -253,15 +228,13 @@ function Home() {
                     </a>
                   )}
                 </TableCell>
-                <TableCell>{item.nameUz}</TableCell>
                 <TableCell>{item.year}</TableCell>
-                <TableCell>{item.studio}</TableCell>
                 <TableCell>
-                  <Badge colorScheme="purple">{item.country}</Badge>
+                  {item.country}
                 </TableCell>
                 <TableCell>{item.duration}</TableCell>
                 <TableCell>
-                  <div className='flex gap-2 justify-around'>
+                  <div className='flex gap-2 justify-around text-center'>
                     <Button className='bg-blue-500 text-white' onClick={() => handleEditItem(item)}>
                       Edit
                     </Button>
@@ -275,7 +248,7 @@ function Home() {
                       {isWatchlist ? 'Move to Main' : 'Move to Watchlist'}
                     </Button>
                     <Button className='bg-green-500 text-white'>
-                      <Link to={`/${currentView.slice(0, -1)}/${item.id}`}>
+                      <Link to={`/film/${item.docId}`}>
                         Open
                       </Link>
                     </Button>
@@ -287,19 +260,20 @@ function Home() {
         </Table>
       </div>
 
-      {/* Add Item Modal */}
+      {/* Add/Edit Item Modal */}
       <AddFilmModal
         isOpen={isOpen}
-        onOpenChange={setIsOpen}
+        onOpenChange={handleModalClose}
         onSubmit={handleAddItem}
         isEdit={isEdit}
         filmData={newItem}
+        contentType="film"
       />
 
       {/* Delete Item Modal */}
       <DeleteModal
         isOpen={isDeleteModalOpen}
-        onOpenChange={setIsDeleteModalOpen}
+        onOpenChange={() => setIsDeleteModalOpen(false)}
         onDelete={handleDeleteItem}
         filmName={itemToDelete ? itemToDelete.name : ''} 
       />
@@ -307,4 +281,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default HomeFilms;

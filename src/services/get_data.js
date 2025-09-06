@@ -21,29 +21,25 @@ const useMediaStore = create((set, get) => ({
   watchlistCartoon: [],
   loading: false,
   error: null,
-  currentView: 'films', // 'films', 'series', 'anime', 'cartoon'
   isWatchlist: false,
+  currentView: 'films',
   
-  // Set current view
   setCurrentView: (view) => {
     set({ currentView: view });
     get().fetchCurrentCollection();
   },
 
-  // Toggle between watchlist and main collection
   toggleWatchlist: () => {
     const { isWatchlist } = get();
     set({ isWatchlist: !isWatchlist });
     get().fetchCurrentCollection();
   },
 
-  // Fetch current collection based on view and watchlist status
   fetchCurrentCollection: async () => {
     const { currentView, isWatchlist } = get();
     get().fetchCollection(currentView, isWatchlist);
   },
 
-  // Fetch specific collection
   fetchCollection: async (type, isWatchlist = false) => {
     set({ loading: true, error: null });
     try {

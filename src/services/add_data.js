@@ -2,8 +2,8 @@
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "../firebase/config";
 
-export const addFilm = async (data) => {
-  const collectionRef = collection(db, 'films');
+export const addFilm = async (data, isWatchlist = false) => {
+  const collectionRef = collection(db, isWatchlist ? 'watchlist_film' : 'films');
 
   try {
     await addDoc(collectionRef, data);
@@ -14,8 +14,8 @@ export const addFilm = async (data) => {
   }
 };
 
-export const addSeries = async (data) => {
-  const collectionRef = collection(db, 'series');
+export const addSeries = async (data, isWatchlist = false) => {
+  const collectionRef = collection(db, isWatchlist ? 'watchlist_series' : 'series');
   
   try {
     await addDoc(collectionRef, data);
@@ -26,8 +26,8 @@ export const addSeries = async (data) => {
   }
 };
 
-export const addCartoon = async (data) => {
-  const collectionRef = collection(db, 'cartoon');
+export const addCartoon = async (data, isWatchlist = false) => {
+  const collectionRef = collection(db, isWatchlist ? 'watchlist_cartoon' : 'cartoon');
   
   try {
     await addDoc(collectionRef, data);
@@ -38,8 +38,8 @@ export const addCartoon = async (data) => {
   }
 };
 
-export const addAnime = async (data) => {
-  const collectionRef = collection(db, 'anime');
+export const addAnime = async (data, isWatchlist = false) => {
+  const collectionRef = collection(db, isWatchlist ? 'watchlist_anime' : 'anime');
   
   try {
     await addDoc(collectionRef, data);
@@ -104,17 +104,17 @@ export const moveFromWatchlistToMain = async (item, type) => {
     // Add to main collection
     let addResult;
     switch (type) {
-      case 'film':
-        addResult = await addFilm(item);
+      case 'films':
+        addResult = await addFilm(item, false);
         break;
       case 'series':
-        addResult = await addSeries(item);
+        addResult = await addSeries(item, false);
         break;
       case 'anime':
-        addResult = await addAnime(item);
+        addResult = await addAnime(item, false);
         break;
       case 'cartoon':
-        addResult = await addCartoon(item);
+        addResult = await addCartoon(item, false);
         break;
       default:
         throw new Error('Invalid type');
@@ -137,17 +137,17 @@ export const moveFromMainToWatchlist = async (item, type) => {
     // Add to watchlist collection
     let addResult;
     switch (type) {
-      case 'film':
-        addResult = await addWatchlistFilm(item);
+      case 'films':
+        addResult = await addFilm(item, true);
         break;
       case 'series':
-        addResult = await addWatchlistSeries(item);
+        addResult = await addSeries(item, true);
         break;
       case 'anime':
-        addResult = await addWatchlistAnime(item);
+        addResult = await addAnime(item, true);
         break;
       case 'cartoon':
-        addResult = await addWatchlistCartoon(item);
+        addResult = await addCartoon(item, true);
         break;
       default:
         throw new Error('Invalid type');

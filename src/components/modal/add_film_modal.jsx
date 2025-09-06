@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-export function AddFilmModal({ isOpen, onOpenChange, onSubmit, isEdit, filmData }) {
+export function AddFilmModal({ isOpen, onOpenChange, onSubmit, isEdit, filmData, contentType = 'film' }) {
   const [formData, setFormData] = React.useState({
     name: '',
     year: '',
@@ -11,14 +11,28 @@ export function AddFilmModal({ isOpen, onOpenChange, onSubmit, isEdit, filmData 
     image: '',
     imdbLink: '',
     nameUz: '',
-    studio: '',
     country: '',
-    duration: ''
+    duration: '',
+    allEpisodes: '',
+    episodes: ''
   });
 
   useEffect(() => {
     if (isEdit && filmData) {
       setFormData(filmData); 
+    } else {
+      setFormData({
+        name: '',
+        year: '',
+        description: '',
+        image: '',
+        imdbLink: '',
+        nameUz: '',
+        country: '',
+        duration: '',
+        allEpisodes: '',
+        episodes: '',
+      });
     }
   }, [isEdit, filmData]);
 
@@ -36,9 +50,11 @@ export function AddFilmModal({ isOpen, onOpenChange, onSubmit, isEdit, filmData 
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[625px] bg-white p-6 rounded-lg shadow-lg">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold">{isEdit ? 'Edit Film' : 'Add Film'}</DialogTitle>
+          <DialogTitle className="text-2xl font-semibold">
+            {isEdit ? `Edit ${contentType.charAt(0).toUpperCase() + contentType.slice(1)}` : `Add ${contentType.charAt(0).toUpperCase() + contentType.slice(1)}`}
+          </DialogTitle>
           <DialogDescription className="text-sm text-gray-600">
-            {isEdit ? 'Edit the film details below.' : 'Fill in the details for the new film.'}
+            {isEdit ? `Edit the ${contentType} details below.` : `Fill in the details for the new ${contentType}.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -81,17 +97,12 @@ export function AddFilmModal({ isOpen, onOpenChange, onSubmit, isEdit, filmData 
             placeholder="IMDb Link"
           />
           <Input
-            name="studio"
-            value={formData.studio}
-            onChange={handleInputChange}
-            placeholder="Studio"
-          />
-          <Input
             name="country"
             value={formData.country}
             onChange={handleInputChange}
             placeholder="Country"
           />
+          {(contentType === 'film' || contentType === 'cartoon') && (
           <Input
             name="duration"
             value={formData.duration}
@@ -99,10 +110,29 @@ export function AddFilmModal({ isOpen, onOpenChange, onSubmit, isEdit, filmData 
             placeholder="Duration"
             type="number"
           />
+          )}
+          {(contentType === 'anime' || contentType === 'series') && (
+            <Input
+              name="allEpisodes"
+              value={formData.allEpisodes}
+              onChange={handleInputChange}
+              placeholder="All Episodes"
+              type="number"
+            />
+          )}
+          {(contentType === 'anime' || contentType === 'series') && (
+            <Input
+              name="episodes"
+              value={formData.episodes}
+              onChange={handleInputChange}
+              placeholder="Number of Episodes"
+              type="number"
+            />
+          )}
 
           <DialogFooter>
             <Button type="submit" className="bg-blue-500 text-white">
-              {isEdit ? 'Save Changes' : 'Add Film'}
+              {isEdit ? 'Save Changes' : `Add ${contentType.charAt(0).toUpperCase() + contentType.slice(1)}`}
             </Button>
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
